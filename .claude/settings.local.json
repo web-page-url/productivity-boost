@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(ELECTRON_MIRROR=\"https://npmmirror.com/mirrors/electron/\" npm install)",
+      "Bash(npx electron-vite build)",
+      "Bash(\"c:/Users/evergreen/Desktop/dev/xuna/apps/git-client/electron.vite.config.ts\":*)",
+      "Bash(gh repo view vercel-labs/skills --json description,readme,defaultBranchRef)",
+      "Bash(gh api repos/vercel-labs/skills/contents --jq '.[].name')",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(mkdir -p \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop\")",
+      "Bash(mkdir -p \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/web\")",
+      "Bash(cp -r \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/electron\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp -r \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/src\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp -r \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/public\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/index.html\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/package.json\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/tsconfig.json\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/vite.config.ts\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/tailwind.config.js\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(cp \"/c/Users/evergreen/Desktop/dev/xuna/apps/skills-manager/postcss.config.js\" \"/c/Users/evergreen/Desktop/dev/skills-manager/apps/desktop/\")",
+      "Bash(grep -rn \"Skills Manager\\\\|skills-manager\\\\|skill-manager\\\\|SkillsManager\" c:/Users/IN7934/Desktop/2026/March-2026/skills-manager --include=*.json --include=*.ts --include=*.tsx --include=*.js --include=*.md --include=*.html --include=*.toml)",
+      "Bash(grep -rn \"Skills Manager\\\\|skills-manager\\\\|Skills-Manager\" c:/Users/IN7934/Desktop/2026/March-2026/skills-manager --include=*.json --include=*.ts --include=*.tsx --include=*.js --include=*.md --include=*.html)",
+      "Bash(npm run:*)",
+      "Bash(node -e \":*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm show:*)",
+      "Bash(node -e \"const v=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf-8''''\\); const arr=JSON.parse\\(v\\); console.log\\(arr.slice\\(-10\\).join\\(''''\\\\n''''\\)\\)\")"
+    ]
+  }
+}

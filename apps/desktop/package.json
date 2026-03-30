@@ -1,0 +1,127 @@
+{
+  "name": "productivity-boost",
+  "version": "0.1.0",
+  "description": "Desktop app for managing AI agent prompt skills",
+  "author": {
+    "name": "Anubhav",
+    "email": "hello@zunalabs.com"
+  },
+  "homepage": "https://sm.idoevergreen.me",
+  "private": true,
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && electron-builder",
+    "preview": "vite preview",
+    "preelectron:dev": "node scripts/gen-icon.js",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "preelectron:build": "node scripts/gen-icon.js",
+    "electron:build": "vite build && electron-builder",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3",
+    "js-yaml": "^4.1.0",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "7zip-bin": "^5.2.0",
+    "app-builder-bin": "^4.0.0",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.0",
+    "electron": "28.3.3",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.28.0",
+    "vite-plugin-electron-renderer": "^0.14.0",
+    "vitest": "^1.6.1",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.zunalabs.productivity-boost",
+    "productName": "Productivity Boost",
+    "copyright": "Copyright © 2025 Anubhav",
+    "icon": "build/icon.png",
+    "directories": {
+      "output": "release"
+    },
+    "asar": true,
+    "compression": "maximum",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "!**/*.map",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,readme.md,*.ts}",
+      "!**/node_modules/.bin"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Productivity Boost"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "certificateFile": "${env.WIN_CSC_LINK}",
+      "certificatePassword": "${env.WIN_CSC_KEY_PASSWORD}",
+      "signingHashAlgorithms": ["sha256"]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "Productivity-Boost-Setup.exe"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Development",
+      "artifactName": "Productivity-Boost-linux-${arch}.${ext}",
+      "maintainer": "Anubhav <hello@zunalabs.com>"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "zunalabs",
+      "repo": "productivity-boost"
+    }
+  }
+}

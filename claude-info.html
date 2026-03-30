@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productivity Boost — Project Deep Dive</title>
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --bg2: #111114;
+      --bg3: #18181c;
+      --border: #2a2a30;
+      --text: #f4f4f5;
+      --muted: #71717a;
+      --violet: #8b5cf6;
+      --violet2: #6d28d9;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --pink: #ec4899;
+      --orange: #f97316;
+      --cyan: #06b6d4;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Glowing orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 20s ease-in-out infinite alternate;
+    }
+
+    .orb1 {
+      width: 600px;
+      height: 600px;
+      background: var(--violet);
+      top: -200px;
+      left: -200px;
+    }
+
+    .orb2 {
+      width: 500px;
+      height: 500px;
+      background: var(--blue);
+      bottom: -100px;
+      right: -100px;
+      animation-delay: -10s;
+    }
+
+    .orb3 {
+      width: 400px;
+      height: 400px;
+      background: var(--cyan);
+      top: 50%;
+      left: 50%;
+      animation-delay: -5s;
+    }
+
+    @keyframes drift {
+      from {
+        transform: translate(0, 0) scale(1);
+      }
+
+      to {
+        transform: translate(40px, 30px) scale(1.05);
+      }
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(12, 12, 14, 0.8);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 max(24px, 5vw);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 600px) {
+      .nav-links {
+        display: none;
+      }
+    }
+
+    /* ── Layout ── */
+    .content {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 max(20px, 4vw);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 140px 0 80px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      background: rgba(139, 92, 246, 0.1);
+      font-size: 0.8rem;
+      color: #a78bfa;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge::before {
+      content: '⬡';
+      font-size: 0.9em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #c4b5fd 0%, #818cf8 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 48px;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: clamp(16px, 4vw, 48px);
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Sections ── */
+    section {
+      padding: 80px 0;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 560px;
+      font-size: 1.05rem;
+      margin-bottom: 48px;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
+      margin: 0;
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(139, 92, 246, 0.5);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(139, 92, 246, 0.08);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, rgba(139, 92, 246, 0.06), transparent 60%);
+      pointer-events: none;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ── Architecture diagram ── */
+    .arch {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: clamp(24px, 4vw, 48px);
+      overflow: hidden;
+    }
+
+    .arch-row {
+      display: flex;
+      align-items: stretch;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .arch-box {
+      flex: 1;
+      min-width: 160px;
+      border-radius: 12px;
+      padding: 18px 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      border: 1px solid;
+    }
+
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      padding: 0 4px;
+    }
+
+    .arch-violet {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+    }
+
+    .arch-blue {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
+
+    .arch-green {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #86efac;
+    }
+
+    .arch-orange {
+      background: rgba(249, 115, 22, 0.1);
+      border-color: rgba(249, 115, 22, 0.4);
+      color: #fdba74;
+    }
+
+    .arch-label {
+      font-size: 0.72rem;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .arch-full {
+      width: 100%;
+      min-width: unset;
+    }
+
+    /* ── Tech stack pills ── */
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .pill-violet {
+      background: rgba(139, 92, 246, 0.12);
+      border-color: rgba(139, 92, 246, 0.35);
+      color: #c4b5fd;
+    }
+
+    .pill-blue {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+    }
+
+    .pill-green {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #86efac;
+    }
+
+    .pill-orange {
+      background: rgba(249, 115, 22, 0.12);
+      border-color: rgba(249, 115, 22, 0.35);
+      color: #fdba74;
+    }
+
+    .pill-cyan {
+      background: rgba(6, 182, 212, 0.12);
+      border-color: rgba(6, 182, 212, 0.35);
+      color: #67e8f9;
+    }
+
+    .pill-pink {
+      background: rgba(236, 72, 153, 0.12);
+      border-color: rgba(236, 72, 153, 0.35);
+      color: #f9a8d4;
+    }
+
+    /* ── Code block ── */
+    .code-block {
+      background: #0a0a0d;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.83rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-block .kw {
+      color: #c084fc;
+    }
+
+    .code-block .str {
+      color: #86efac;
+    }
+
+    .code-block .ty {
+      color: #67e8f9;
+    }
+
+    .code-block .cm {
+      color: #52525b;
+    }
+
+    .code-block .nu {
+      color: #fdba74;
+    }
+
+    .code-block .prop {
+      color: #f4f4f5;
+    }
+
+    /* ── IPC table ── */
+    .ipc-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .ipc-table th {
+      background: var(--bg3);
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ipc-table td {
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(42, 42, 48, 0.6);
+      vertical-align: top;
+    }
+
+    .ipc-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ipc-table tr:hover td {
+      background: rgba(139, 92, 246, 0.04);
+    }
+
+    .ipc-table .channel {
+      font-family: monospace;
+      color: #c084fc;
+      font-size: 0.82rem;
+    }
+
+    .ipc-table .desc {
+      color: var(--muted);
+    }
+
+    /* ── Agents grid ── */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+      gap: 14px;
+    }
+
+    .agent-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .agent-card:hover {
+      border-color: rgba(139, 92, 246, 0.45);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .agent-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .agent-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .agent-path {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: monospace;
+      margin-top: 2px;
+    }
+
+    /* ── Flow diagram ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      position: relative;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 44px;
+      width: 2px;
+      height: calc(100% - 12px);
+      background: linear-gradient(to bottom, var(--violet), transparent);
+    }
+
+    .flow-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(139, 92, 246, 0.15);
+      border: 2px solid var(--violet);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #c4b5fd;
+      flex-shrink: 0;
+    }
+
+    .flow-content {
+      flex: 1;
+      padding: 10px 0 32px;
+    }
+
+    .flow-content h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .flow-content p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* ── Build table ── */
+    .build-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+      gap: 16px;
+    }
+
+    .build-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .build-card .os {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .build-card .os-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .build-card .format {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--cyan);
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin: 3px 3px 3px 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--violet);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Misc ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-row {
+        flex-direction: column;
+      }
+
+      .arch-arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    .highlight {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.1));
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .mono {
+      font-family: monospace;
+      color: #c4b5fd;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Background orbs -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <!-- Nav -->
+  <nav>
+    <span class="nav-logo">⬡ Productivity Boost</span>
+    <ul class="nav-links">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#ipc">IPC API</a></li>
+      <li><a href="#agents">Agents</a></li>
+      <li><a href="#build">Build</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <div class="content">
+    <div class="hero reveal" id="overview">
+      <div class="hero-badge">Project Deep Dive · 2026</div>
+      <h1>
+        <span class="gradient-text">Productivity Boost</span><br />
+        Universal AI Agent Hub
+      </h1>
+      <p class="hero-sub">
+        A cross-platform Electron desktop app providing a single unified interface
+        to manage, discover, and install skills across 11+ AI coding assistants.
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-num">11+</div>
+          <div class="stat-label">Supported Agents</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">2</div>
+          <div class="stat-label">Apps in Monorepo</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Platforms</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">TS</div>
+          <div class="stat-label">Full TypeScript</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- What it does -->
+  <div class="content">
+    <section class="reveal">
+      <span class="section-tag">What it does</span>
+      <h2 class="section-title">One App to Rule All Skills</h2>
+      <p class="section-desc">
+        Every AI coding assistant stores skills in its own hidden folder with its own format.
+        Productivity Boost unifies them all into a single, beautiful interface.
+      </p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon" style="background:rgba(139,92,246,0.15);">🔍</div>
+          <h3>Unified Discovery</h3>
+          <p>Scans all agent skill directories on startup — Claude Code, Cursor, Copilot, Windsurf, Gemini CLI, and more
+            — and displays them in one place.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(34,197,94,0.15);">⚡</div>
+          <h3>Enable / Disable</h3>
+          <p>Toggle skills on and off without deleting them. Disabled skills are safely moved to a <span
+              class="mono">.disabled/</span> subfolder and can be re-enabled anytime.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(59,130,246,0.15);">📦</div>
+          <h3>GitHub Install</h3>
+          <p>Paste any GitHub repository URL. The app discovers available skills via GitHub's recursive tree API and
+            lets you select which ones to install.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(249,115,22,0.15);">📋</div>
+          <h3>Copy Between Agents</h3>
+          <p>Found a great Claude Code skill? Copy it to Cursor or Windsurf in one click. The app handles all path
+            resolution automatically.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(6,182,212,0.15);">🛒</div>
+          <h3>Marketplace</h3>
+          <p>Browse community-published skill packs from mcpmarket.com directly within the app. Search, preview, and
+            install in a single flow.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon" style="background:rgba(236,72,153,0.15);">🔐</div>
+          <h3>GitHub Token</h3>
+          <p>Stores a personal access token locally to lift GitHub API rate limits during skill discovery and
+            installation — no server involved.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Architecture -->
+  <div class="content">
+    <section class="reveal" id="architecture">
+      <span class="section-tag">Architecture</span>
+      <h2 class="section-title">Turborepo Monorepo</h2>
+      <p class="section-desc">
+        Two applications share a single repository, orchestrated by Turborepo for
+        parallel builds and cached task execution.
+      </p>
+      <div class="arch">
+        <div class="arch-row">
+          <div class="arch-box arch-violet arch-full" style="font-size:1rem; padding:20px;">
+            🗂 <strong>productivity-boost/</strong> — Turborepo Monorepo
+            <span class="arch-label">npm workspaces · Turborepo 2.7 · TypeScript 5 · Prettier</span>
+          </div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-box arch-blue" style="flex:1.2">
+            🖥 <strong>apps/desktop</strong>
+            <span class="arch-label">Electron + Vite + React</span>
+          </div>
+          <div class="arch-box arch-green" style="flex:0.8">
+            🌐 <strong>apps/web</strong>
+            <span class="arch-label">Next.js 16 Landing Page</span>
+          </div>
+        </div>
+      </div>
+
+      <br />
+
+      <h3 style="margin-bottom:24px; font-size:1.2rem; letter-spacing:-0.02em;">Desktop App — Process Architecture</h3>
+      <div class="arch">
+        <div class="arch-row">
+          <div class="arch-box arch-blue">
+            ⚛ <strong>Renderer Process</strong>
+            <span class="arch-label">React 18 + Vite · Tailwind CSS<br />Components, State, UI</span>
+          </div>
+          <div class="arch-arrow">⟷</div>
+          <div class="arch-box arch-violet">
+            🌉 <strong>Preload Bridge</strong>
+            <span class="arch-label">contextBridge · ipcRenderer<br />window.skillsAPI</span>
+          </div>
+          <div class="arch-arrow">⟷</div>
+          <div class="arch-box arch-orange">
+            ⚙ <strong>Main Process</strong>
+            <span class="arch-label">Node.js · fs · https<br />ipcMain handlers</span>
+          </div>
+        </div>
+        <div class="arch-row" style="margin-top:16px;">
+          <div class="arch-box arch-green" style="flex:1">
+            💾 File System
+            <span class="arch-label">Skill directories, SKILL.md files</span>
+          </div>
+          <div class="arch-box arch-green" style="flex:1">
+            🐙 GitHub API
+            <span class="arch-label">Tree API · Raw content</span>
+          </div>
+          <div class="arch-box arch-green" style="flex:1">
+            🛒 mcpmarket.com
+            <span class="arch-label">Marketplace search API</span>
+          </div>
+          <div class="arch-box arch-green" style="flex:1">
+            📁 userData Config
+            <span class="arch-label">GitHub token storage</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Tech Stack -->
+  <div class="content">
+    <section class="reveal" id="stack">
+      <span class="section-tag">Tech Stack</span>
+      <h2 class="section-title">Built With</h2>
+      <p class="section-desc">A modern, type-safe stack chosen for reliability and developer experience.</p>
+
+      <div class="two-col">
+        <div>
+          <h3
+            style="margin-bottom:16px; color:var(--muted); font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase;">
+            Desktop App</h3>
+          <div class="tech-grid">
+            <span class="pill pill-orange">⚡ Electron 28</span>
+            <span class="pill pill-blue">⚛ React 18</span>
+            <span class="pill pill-blue">🔷 TypeScript 5</span>
+            <span class="pill pill-violet">🔥 Vite 5</span>
+            <span class="pill pill-cyan">🎨 Tailwind CSS 3</span>
+            <span class="pill pill-green">📦 electron-builder</span>
+            <span class="pill pill-pink">🔷 js-yaml</span>
+            <span class="pill pill-orange">🧪 Vitest</span>
+            <span class="pill pill-violet">🎯 Lucide React</span>
+          </div>
+        </div>
+        <div>
+          <h3
+            style="margin-bottom:16px; color:var(--muted); font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase;">
+            Web App</h3>
+          <div class="tech-grid">
+            <span class="pill pill-blue">▲ Next.js 16</span>
+            <span class="pill pill-blue">⚛ React 18</span>
+            <span class="pill pill-blue">🔷 TypeScript 5</span>
+            <span class="pill pill-violet">✨ Framer Motion 12</span>
+            <span class="pill pill-cyan">🎨 Tailwind CSS</span>
+            <span class="pill pill-green">📊 Vercel Analytics</span>
+            <span class="pill pill-pink">🔤 Geist Fonts</span>
+          </div>
+        </div>
+        <div>
+          <h3
+            style="margin-bottom:16px; color:var(--muted); font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase;">
+            Tooling</h3>
+          <div class="tech-grid">
+            <span class="pill pill-orange">🔁 Turborepo 2.7</span>
+            <span class="pill pill-green">📦 npm Workspaces</span>
+            <span class="pill pill-violet">✨ Prettier 3</span>
+            <span class="pill pill-cyan">🔵 ESLint</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Key Data Model -->
+  <div class="content">
+    <section class="reveal">
+      <span class="section-tag">Data Model</span>
+      <h2 class="section-title">The Skill Interface</h2>
+      <p class="section-desc">Every skill is represented by a unified TypeScript interface, regardless of which agent it
+        belongs to.</p>
+
+      <div class="code-block">
+        <span class="cm">// apps/desktop/src/types/index.ts</span>
+        <span class="kw">interface</span> <span class="ty">Skill</span> {
+        id: <span class="ty">string</span> <span class="cm">// "{tool}::{dirName}" — globally unique</span>
+        name: <span class="ty">string</span> <span class="cm">// From SKILL.md frontmatter, falls back to dir
+          name</span>
+        description: <span class="ty">string</span> <span class="cm">// Short description of what the skill does</span>
+        domain: <span class="ty">string</span> <span class="cm">// Category (e.g. "pdf-processing", "git")</span>
+        version: <span class="ty">string</span> <span class="cm">// Semantic version string</span>
+        tags: <span class="ty">string</span>[] <span class="cm">// e.g. ["pdf", "documents", "text-extraction"]</span>
+        keywords: <span class="ty">string</span>[] <span class="cm">// Primary + secondary discovery keywords</span>
+        path: <span class="ty">string</span> <span class="cm">// Absolute filesystem path</span>
+        tool: <span class="ty">string</span> <span class="cm">// Agent name: "Claude Code", "Cursor", etc.</span>
+        toolPath: <span class="ty">string</span> <span class="cm">// Base skills directory for the agent</span>
+        enabled: <span class="ty">boolean</span> <span class="cm">// false if inside .disabled/ subfolder</span>
+        hasTemplates: <span class="ty">boolean</span> <span class="cm">// Whether templates/ subdir exists</span>
+        templateCount: <span class="ty">number</span> <span class="cm">// Number of template files found</span>
+        }
+      </div>
+
+      <br />
+
+      <h3 style="margin-bottom:16px; font-size:1rem;">SKILL.md — Frontmatter Format</h3>
+      <div class="code-block">
+        <span class="cm">---</span>
+        <span class="prop">name:</span> <span class="str">My Awesome Skill</span>
+        <span class="prop">description:</span> <span class="str">Does something really useful</span>
+        <span class="prop">domain:</span> <span class="str">productivity</span>
+        <span class="prop">version:</span> <span class="str">1.0.0</span>
+        <span class="prop">tags:</span> <span class="str">[automation, files, output]</span>
+        <span class="prop">triggers:</span>
+        <span class="prop">keywords:</span>
+        <span class="prop">primary:</span> <span class="str">[automate, run]</span>
+        <span class="prop">secondary:</span> <span class="str">[execute, script]</span>
+        <span class="cm">---</span>
+
+        <span class="cm"># Rest is markdown — becomes the README tab in the UI</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- IPC API -->
+  <div class="content">
+    <section class="reveal" id="ipc">
+      <span class="section-tag">Electron IPC</span>
+      <h2 class="section-title">window.skillsAPI</h2>
+      <p class="section-desc">
+        All communication between React and Node.js goes through a typed API
+        exposed via Electron's <span class="mono">contextBridge</span>.
+      </p>
+
+      <div style="overflow-x:auto;">
+        <table class="ipc-table">
+          <thead>
+            <tr>
+              <th>IPC Channel</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="channel">skills:scanAll</td>
+              <td class="desc">Scan all agent directories and return all skills grouped by tool</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:getReadme</td>
+              <td class="desc">Read raw SKILL.md / README content for a skill path</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:listTemplates</td>
+              <td class="desc">List template files in a skill's <span class="mono">templates/</span> subfolder</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:readTemplate</td>
+              <td class="desc">Read the content of a specific template file</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:toggle</td>
+              <td class="desc">Move skill folder to/from <span class="mono">.disabled/</span> to enable/disable</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:delete</td>
+              <td class="desc">Permanently delete a skill directory from disk</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:listAgentPaths</td>
+              <td class="desc">Return the full TOOL_PATHS mapping of all known agents</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:copyToAgent</td>
+              <td class="desc">Copy a skill folder to a different agent's skills directory</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:discoverSkills</td>
+              <td class="desc">Query GitHub recursive tree API to find SKILL.md files in a repo</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:installFromGitHub</td>
+              <td class="desc">Download and install selected skills from a GitHub repository</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:installProgress</td>
+              <td class="desc">Event stream emitted during installation (progress messages)</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:openInExplorer</td>
+              <td class="desc">Open skill folder in the OS file explorer (<span class="mono">shell.openPath</span>)</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:openExternal</td>
+              <td class="desc">Open a URL in the default browser (<span class="mono">shell.openExternal</span>)</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:searchMarketplace</td>
+              <td class="desc">Call mcpmarket.com search API for skill packs</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:getGithubToken</td>
+              <td class="desc">Retrieve stored GitHub PAT from userData config file</td>
+            </tr>
+            <tr>
+              <td class="channel">skills:setGithubToken</td>
+              <td class="desc">Persist a GitHub PAT to userData config file</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <br />
+
+      <h3 style="margin-bottom:20px; font-size:1rem;">Install Flow — 3-Stage State Machine</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-circle">1</div>
+          <div class="flow-content">
+            <h4>Input Stage</h4>
+            <p>User pastes a GitHub repository URL. The modal validates it and triggers <span
+                class="mono">skills:discoverSkills</span>.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-circle">2</div>
+          <div class="flow-content">
+            <h4>Select Stage</h4>
+            <p>Discovered skills are displayed with checkboxes. User picks which skills to install and which target
+              agent to install into.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-circle">3</div>
+          <div class="flow-content">
+            <h4>Installing Stage</h4>
+            <p>Files are downloaded one by one via <span class="mono">raw.githubusercontent.com</span>. Progress
+              messages stream back via <span class="mono">skills:installProgress</span> events.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Supported Agents -->
+  <div class="content">
+    <section class="reveal" id="agents">
+      <span class="section-tag">Supported Agents</span>
+      <h2 class="section-title">11+ Coding Assistants</h2>
+      <p class="section-desc">
+        Each agent has a hardcoded skill path relative to the user's home directory.
+        The app scans all of them on startup.
+      </p>
+      <div class="agents-grid">
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(249,115,22,0.2);">🟠</div>
+          <div>
+            <div class="agent-name">Claude Code</div>
+            <div class="agent-path">~/.claude/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(59,130,246,0.2);">🔵</div>
+          <div>
+            <div class="agent-name">Cursor</div>
+            <div class="agent-path">~/.cursor/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(34,197,94,0.2);">🟢</div>
+          <div>
+            <div class="agent-name">GitHub Copilot</div>
+            <div class="agent-path">~/.copilot/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(139,92,246,0.2);">🟣</div>
+          <div>
+            <div class="agent-name">Windsurf</div>
+            <div class="agent-path">~/.windsurf/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(6,182,212,0.2);">🔷</div>
+          <div>
+            <div class="agent-name">Gemini CLI</div>
+            <div class="agent-path">~/.gemini/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(236,72,153,0.2);">🩷</div>
+          <div>
+            <div class="agent-name">Goose</div>
+            <div class="agent-path">~/.goose/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(249,115,22,0.2);">🟡</div>
+          <div>
+            <div class="agent-name">Codex CLI</div>
+            <div class="agent-path">~/.codex/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(139,92,246,0.2);">💜</div>
+          <div>
+            <div class="agent-name">Aider</div>
+            <div class="agent-path">~/.aider/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(59,130,246,0.2);">🔹</div>
+          <div>
+            <div class="agent-name">Continue</div>
+            <div class="agent-path">~/.continue/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(34,197,94,0.2);">💚</div>
+          <div>
+            <div class="agent-name">Zed</div>
+            <div class="agent-path">~/.zed/skills</div>
+          </div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-dot" style="background:rgba(249,115,22,0.2);">🔶</div>
+          <div>
+            <div class="agent-name">Amp</div>
+            <div class="agent-path">~/.amp/skills</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Build & Distribution -->
+  <div class="content">
+    <section class="reveal" id="build">
+      <span class="section-tag">Build & Distribution</span>
+      <h2 class="section-title">Ships on Every Platform</h2>
+      <p class="section-desc">
+        electron-builder produces native installers for all three major operating systems
+        from a single codebase.
+      </p>
+
+      <div class="build-grid" style="margin-bottom:40px;">
+        <div class="build-card">
+          <span class="os">🪟</span>
+          <div class="os-name">Windows</div>
+          <span class="format">.exe NSIS</span>
+        </div>
+        <div class="build-card">
+          <span class="os">🍎</span>
+          <div class="os-name">macOS Universal</div>
+          <span class="format">.dmg arm64</span>
+          <span class="format">.dmg x64</span>
+        </div>
+        <div class="build-card">
+          <span class="os">🐧</span>
+          <div class="os-name">Linux</div>
+          <span class="format">.AppImage x86_64</span>
+          <span class="format">.deb</span>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom:20px; font-size:1rem;">Monorepo Commands</h3>
+      <div class="code-block">
+        <span class="cm"># Run everything in development</span>
+        <span class="str">npm run dev</span> <span class="cm">→ Electron dev + Next.js dev (parallel)</span>
+
+        <span class="cm"># Run individual apps</span>
+        <span class="str">npm run dev:desktop</span> <span class="cm">→ Electron only (Vite HMR)</span>
+        <span class="str">npm run dev:web</span> <span class="cm">→ Next.js only (localhost:3000)</span>
+
+        <span class="cm"># Production build (Turborepo cached)</span>
+        <span class="str">npm run build</span> <span class="cm">→ tsc → vite build → electron-builder</span>
+
+        <span class="cm"># Code quality</span>
+        <span class="str">npm run lint</span> <span class="cm">→ ESLint across all workspaces</span>
+        <span class="str">npm run format</span> <span class="cm">→ Prettier across all workspaces</span>
+      </div>
+
+      <br />
+
+      <div class="highlight">
+        <h3 style="margin-bottom:12px; font-size:1rem;">App Identity</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:24px;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">App ID</div>
+            <div class="mono" style="font-size:0.9rem;">com.zunalabs.productivity-boost</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Product Name</div>
+            <div class="mono" style="font-size:0.9rem;">Productivity Boost</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Output Dir</div>
+            <div class="mono" style="font-size:0.9rem;">release/</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:4px;">Compression</div>
+            <div class="mono" style="font-size:0.9rem;">maximum + ASAR</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- File map -->
+  <div class="content">
+    <section class="reveal">
+      <span class="section-tag">File Map</span>
+      <h2 class="section-title">Critical Files at a Glance</h2>
+
+      <div class="two-col">
+        <div>
+          <h3
+            style="font-size:0.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:16px;">
+            Desktop App</h3>
+          <div class="code-block" style="font-size:0.78rem; line-height:2;">
+            <span class="str">apps/desktop/</span>
+            ├── <span class="ty">electron/main.ts</span> <span class="cm">IPC + Node.js</span>
+            ├── <span class="ty">electron/preload.ts</span> <span class="cm">contextBridge</span>
+            ├── <span class="kw">src/App.tsx</span> <span class="cm">Root state</span>
+            ├── <span class="kw">src/main.tsx</span> <span class="cm">React DOM mount</span>
+            ├── <span class="kw">src/types/index.ts</span> <span class="cm">Interfaces</span>
+            ├── <span class="kw">src/lib/repoUtils.ts</span> <span class="cm">URL helpers</span>
+            ├── <span class="kw">src/components/</span>
+            │ ├── <span class="prop">Header.tsx</span> <span class="cm">Search + filters</span>
+            │ ├── <span class="prop">Sidebar.tsx</span> <span class="cm">Skills list</span>
+            │ ├── <span class="prop">SkillDetail.tsx</span> <span class="cm">Detail panel</span>
+            │ ├── <span class="prop">InstallModal.tsx</span> <span class="cm">GitHub install</span>
+            │ ├── <span class="prop">Marketplace.tsx</span> <span class="cm">MCP market</span>
+            │ └── <span class="prop">ToolIcon.tsx</span> <span class="cm">Agent logos</span>
+            └── <span class="ty">vite.config.ts</span>
+          </div>
+        </div>
+        <div>
+          <h3
+            style="font-size:0.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:16px;">
+            Web App</h3>
+          <div class="code-block" style="font-size:0.78rem; line-height:2;">
+            <span class="str">apps/web/src/app/</span>
+            ├── <span class="kw">page.tsx</span> <span class="cm">Home page</span>
+            ├── <span class="kw">layout.tsx</span> <span class="cm">Root layout</span>
+            ├── <span class="kw">api/downloads/route.ts</span> <span class="cm">Download API</span>
+            ├── <span class="prop">AgentIcon.tsx</span> <span class="cm">Agent logos</span>
+            ├── <span class="prop">AppMockup.tsx</span> <span class="cm">Screenshot</span>
+            ├── <span class="prop">Faq.tsx</span> <span class="cm">FAQ section</span>
+            ├── <span class="prop">LampContainer.tsx</span> <span class="cm">Lamp animation</span>
+            ├── <span class="prop">ShootingStars.tsx</span> <span class="cm">Stars bg</span>
+            ├── <span class="prop">Spotlight.tsx</span> <span class="cm">Spotlight fx</span>
+            └── <span class="prop">TracingBeam.tsx</span> <span class="cm">Beam animation</span>
+          </div>
+
+          <br />
+
+          <h3
+            style="font-size:0.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:16px;">
+            Root</h3>
+          <div class="code-block" style="font-size:0.78rem; line-height:2;">
+            <span class="ty">package.json</span> <span class="cm">Workspace root</span>
+            <span class="ty">turbo.json</span> <span class="cm">Task pipeline</span>
+            <span class="ty">CONTRIBUTING.md</span> <span class="cm">Dev guide</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Footer -->
+  <div class="content">
+    <footer>
+      <p>Productivity Boost · Built by <a href="#">Zuna Labs</a> · Turborepo + Electron + Next.js</p>
+      <p style="margin-top:8px; font-size:0.78rem;">Generated by Claude Code · 2026</p>
+    </footer>
+  </div>
+
+  <!-- Scroll reveal script -->
+  <script>
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+
+</html>
