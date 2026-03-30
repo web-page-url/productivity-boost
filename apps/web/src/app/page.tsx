@@ -1649,7 +1649,7 @@ export default function Home() {
                   </svg>
                 ),
                 title: 'Marketplace',
-                desc: 'Browse community-published skill packs from mcpmarket.com directly within the app. Search, preview, and install in a single flow.',
+                desc: 'Browse community-published skill packs from GitHub directly within the app. Search, preview, and install in a single flow.',
               },
               {
                 iconBg: 'linear-gradient(135deg, #2d1a3d 0%, #1f1228 100%)',

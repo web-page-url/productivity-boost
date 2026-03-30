@@ -68,7 +68,7 @@ declare global {
       getReadme: (skillPath: string) => Promise<string>
       listTemplates: (skillPath: string) => Promise<string[]>
       readTemplate: (skillPath: string, templateName: string) => Promise<string>
-      toggle: (skillPath: string, enabled: boolean) => Promise<boolean>
+      toggle: (skillPath: string, enabled: boolean) => Promise<{ ok: boolean; newPath: string }>
       delete: (skillPath: string) => Promise<boolean>
       listAgentPaths: () => Promise<Record<string, string>>
       copyToAgent: (skillPath: string, targetAgent: string) => Promise<{ ok: boolean; error?: string }>

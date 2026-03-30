@@ -90,7 +90,7 @@ const items = [
   },
   {
     q: 'Does it collect any data or telemetry?',
-    a: "None at all. There are no analytics, crash reporters, update pings, or any form of telemetry. The app makes outbound requests only when you explicitly trigger a GitHub install or marketplace browse — and only to GitHub's public API or mcpmarket.com. Your GitHub token (if set) is stored locally in your OS keychain and never transmitted anywhere else.",
+    a: "None at all. There are no analytics, crash reporters, update pings, or any form of telemetry. The app makes outbound requests only when you explicitly trigger a GitHub install or marketplace browse — and only to GitHub's public API. Your GitHub token (if set) is stored locally in your OS keychain and never transmitted anywhere else.",
   },
 ]
 

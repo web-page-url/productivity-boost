@@ -123,7 +123,7 @@ const features: Feature[] = [
     iconBg: 'linear-gradient(135deg, #0f2d3d 0%, #0a2433 100%)',
     title: 'Marketplace',
     description:
-      'Browse community-published skill packs from mcpmarket.com directly within the app. Search, preview, and install in a single flow.',
+      'Browse community-published skill packs from GitHub directly within the app. Search, preview, and install in a single flow.',
   },
   {
     icon: <KeyIcon />,

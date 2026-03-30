@@ -615,35 +615,40 @@ ipcMain.handle('skills:setGithubToken', (_e, token: string) => {
   writeConfig(config)
 })
 
-ipcMain.handle('skills:searchMarketplace', (_e, query: string, page: number) => {
-  function doGet(url: string): Promise<{ ok: boolean; data?: any; error?: string }> {
-    return new Promise((resolve) => {
-      const req = https.get(url, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'skillfish-cli',
-          'Referer': 'https://mcpmarket.com/',
+ipcMain.handle('skills:searchMarketplace', (_e, query: string, page: number): Promise<{ ok: boolean; data?: any; error?: string }> => {
+  return new Promise((resolve) => {
+    const q = query ? `${query} topic:mcp-server` : 'topic:mcp-server';
+    const params = new URLSearchParams({
+      q: q,
+      per_page: '24',
+      page: String(page)
+    });
+    
+    httpsGet(`https://api.github.com/search/repositories?${params}`, (data) => {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.items) {
+          const skills = parsed.items.map((item: any) => ({
+             id: item.id,
+             name: item.name,
+             slug: item.name,
+             github: item.full_name,
+             owner: { name: item.owner.login, url: item.owner.html_url },
+             description: item.description,
+             github_stars: item.stargazers_count
+          }));
+          const hasMore = parsed.total_count > page * 24;
+          resolve({ ok: true, data: { skills, pagination: { hasMore } } });
+        } else {
+          resolve({ ok: false, error: (parsed as any).message || 'GitHub API returned unexpected format' });
         }
-      }, (res) => {
-        if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-          doGet(res.headers.location).then(resolve)
-          return
-        }
-        let data = ''
-        res.on('data', (chunk) => (data += chunk))
-        res.on('end', () => {
-          try {
-            resolve({ ok: true, data: JSON.parse(data) })
-          } catch {
-            resolve({ ok: false, error: `Registry returned non-JSON (HTTP ${res.statusCode}): ${data.slice(0, 200)}` })
-          }
-        })
-      })
-      req.on('error', (e) => resolve({ ok: false, error: e.message }))
-    })
-  }
-  const params = new URLSearchParams({ q: query, type: 'skills', limit: '24', page: String(page) })
-  return doGet(`https://mcpmarket.com/api/search?${params}`)
+      } catch (err: any) {
+        resolve({ ok: false, error: 'Failed to parse registry data: ' + err.message });
+      }
+    }, (errStr) => {
+      resolve({ ok: false, error: errStr });
+    });
+  });
 })
 
 ipcMain.handle('prompts:load', () => readPrompts())

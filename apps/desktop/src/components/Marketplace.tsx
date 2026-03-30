@@ -96,10 +96,10 @@ export default function Marketplace({ onInstall }: MarketplaceProps) {
           {!loading && (q ? `${skills.length} of ${allSkills.length}` : `${allSkills.length} packs`)}
         </span>
         <button
-          onClick={() => window.skillsAPI.openExternal('https://mcpmarket.com')}
+          onClick={() => window.skillsAPI.openExternal('https://github.com/topics/mcp-server')}
           className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
         >
-          Powered by mcpmarket.com ↗
+          Powered by GitHub ↗
         </button>
       </div>
 
