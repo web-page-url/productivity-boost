@@ -423,6 +423,8 @@ interface DiscoverResult {
   error?: string
 }
 
+const discoverCache = new Map<string, Record<string, string>>()
+
 // Discover skills in a GitHub repo without installing anything.
 // Checks skills/ subdir first, then falls back to root.
 // Parses SKILL.md frontmatter for name + description.
@@ -484,7 +486,7 @@ function discoverSkills(repo: string): Promise<DiscoverResult> {
         // e.g. ['SKILL.md'] → basePath='' (single-skill repo)
         const skillDirPaths = skillMdPaths.map((p) => p.split('/').slice(0, -1).join('/')) // dir containing SKILL.md
         const isSingleSkill = skillDirPaths.length === 1 && skillDirPaths[0] === ''
-        const skillsBasePath = isSingleSkill ? '' : (() => {
+        const skillsBasePath = isSingleSkill ? '__ROOT__' : (() => {
           // Find common parent
           const parts0 = skillDirPaths[0].split('/')
           let common = parts0.slice(0, -1) // parent of the skill dir
@@ -500,19 +502,27 @@ function discoverSkills(repo: string): Promise<DiscoverResult> {
         // Fetch each SKILL.md and build result
         const skills: DiscoveredSkill[] = []
         let pending = skillMdPaths.length
+        const pathsMap: Record<string, string> = {}
 
         skillMdPaths.forEach((skillMdPath) => {
           const dirPath = skillMdPath.split('/').slice(0, -1).join('/')
           const dirName = isSingleSkill ? repoName : (dirPath.split('/').pop() || repoName)
+          pathsMap[dirName] = dirPath
           const rawUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/HEAD/${skillMdPath}`
 
           httpsGet(rawUrl, (content) => {
             const meta = parseSkillMdFrontmatter(content)
             skills.push({ dirName, name: meta.name || dirName, description: meta.description })
-            if (--pending === 0) resolve({ ok: true, skillsBasePath, skills })
+            if (--pending === 0) {
+              discoverCache.set(repo.trim(), pathsMap)
+              resolve({ ok: true, skillsBasePath, skills })
+            }
           }, () => {
             skills.push({ dirName, name: dirName, description: '' })
-            if (--pending === 0) resolve({ ok: true, skillsBasePath, skills })
+            if (--pending === 0) {
+              discoverCache.set(repo.trim(), pathsMap)
+              resolve({ ok: true, skillsBasePath, skills })
+            }
           })
         })
       },
@@ -540,8 +550,14 @@ function installFromGitHub(
     let pending = skillDirNames.length
     if (pending === 0) return resolve({ ok: true, installed: [] })
 
+    const cacheMap = discoverCache.get(repo.trim()) || {}
+
     skillDirNames.forEach((dirName) => {
-      const dirPath = skillsBasePath ? `${skillsBasePath}/${dirName}` : dirName
+      let dirPath = cacheMap[dirName]
+      if (dirPath === undefined) {
+        const isRoot = skillsBasePath === '__ROOT__'
+        dirPath = isRoot ? '' : (skillsBasePath ? `${skillsBasePath}/${dirName}` : dirName)
+      }
       const destDir = path.join(targetBase, dirName)
 
       if (fs.existsSync(destDir)) {
@@ -550,25 +566,49 @@ function installFromGitHub(
         return
       }
 
-      httpsGet(`https://api.github.com/repos/${owner}/${repoName}/contents/${dirPath}`, (raw) => {
+      const url = `https://api.github.com/repos/${owner}/${repoName}/contents${dirPath ? '/' + dirPath : ''}`
+      httpsGet(url, (raw) => {
         let files: Array<{ name: string; type: string; download_url: string | null }> = []
         try { const parsed = JSON.parse(raw); files = Array.isArray(parsed) ? parsed : [] } catch { files = [] }
 
         const fileList = files.filter((f) => f.type === 'file')
-        if (fileList.length === 0) { if (--pending === 0) resolve({ ok: true, installed }); return }
+        if (fileList.length === 0) { 
+          onProgress(`Skipping ${dirName} (no downloadable files found)`)
+          if (--pending === 0) resolve({ ok: true, installed }); 
+          return 
+        }
 
         fs.mkdirSync(destDir, { recursive: true })
         onProgress(`Installing ${dirName}...`)
 
         let filePending = fileList.length
+        let fetchFailed = false
         fileList.forEach((file) => {
-          if (!file.download_url) { if (--filePending === 0) { installed.push(dirName); if (--pending === 0) resolve({ ok: true, installed }) }; return }
+          if (!file.download_url) { 
+            if (--filePending === 0) { 
+              if (!fetchFailed) installed.push(dirName); 
+              if (--pending === 0) resolve({ ok: true, installed }) 
+            }
+            return 
+          }
           httpsGet(file.download_url, (content) => {
             try { fs.writeFileSync(path.join(destDir, file.name), content) } catch { /* ignore */ }
-            if (--filePending === 0) { installed.push(dirName); if (--pending === 0) resolve({ ok: true, installed }) }
-          }, () => { if (--filePending === 0) { if (--pending === 0) resolve({ ok: true, installed }) } })
+            if (--filePending === 0) { 
+              if (!fetchFailed) installed.push(dirName); 
+              if (--pending === 0) resolve({ ok: true, installed }) 
+            }
+          }, (err) => { 
+            fetchFailed = true
+            onProgress(`Failed to download ${file.name} for ${dirName}: ${err}`)
+            if (--filePending === 0) { 
+              if (--pending === 0) resolve({ ok: true, installed }) 
+            } 
+          })
         })
-      }, () => { if (--pending === 0) resolve({ ok: true, installed }) })
+      }, (err) => { 
+        onProgress(`Failed to fetch repo contents for ${dirName}: ${err}`)
+        if (--pending === 0) resolve({ ok: true, installed }) 
+      })
     })
   })
 }
